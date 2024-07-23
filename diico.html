@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #ddd;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">QR Code Scanner</h1>
+    <video id="video" autoplay></video>
+    <p id="result">Scan result will appear here</p>
+
+    <script>
+        const video = document.getElementById('video');
+        const result = document.getElementById('result');
+        const canvas = document.createElement('canvas');
+        const canvasCtx = canvas.getContext('2d');
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.setAttribute("playsinline", true); // required to tell iOS safari we want to play this video inline
+                    video.play();
+                    scanQRCode();
+                })
+                .catch(function(err) {
+                    result.innerText = Error: ${err};
+                });
+        }
+
+        function scanQRCode() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+            if (code) {
+                result.innerText = Scanned result: ${code.data};
+            } else {
+                requestAnimationFrame(scanQRCode);
+            }
+        }
+
+        startCamera();
+    </script>
+</body>
+</html>
